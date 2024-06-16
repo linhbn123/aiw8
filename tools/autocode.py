@@ -169,6 +169,6 @@ graph = workflow.compile()
 # Invoke the workflow with an adhoc prompt
 adhoc_prompt = "Create a tic-tac-toe game"
 state = {"messages": [HumanMessage(content=adhoc_prompt, name="User")]}
-result = graph.run(state)
+result = graph.process(state)
 
 print(result)
