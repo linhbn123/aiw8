@@ -22,7 +22,7 @@ python_repl_tool = PythonREPLTool()
 
 # Step 3: Define the system prompt for the supervisor agent
 # Customize the members list as needed.
-members = ["Researcher", "Coder", "Reviewer", "QA Tester"]
+members = ["Researcher", "Coder", "Reviewer", "QATester"]
 system_prompt = (
     f"You are a supervisor tasked with managing a conversation between the"
     f" following workers:  {members}. Given the following user request,"
