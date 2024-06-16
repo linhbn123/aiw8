@@ -166,9 +166,14 @@ workflow.set_entry_point("supervisor")
 # This creates the executable workflow.
 graph = workflow.compile()
 
-# Invoke the workflow with an adhoc prompt
-adhoc_prompt = "Create a tic-tac-toe game"
-state = {"messages": [HumanMessage(content=adhoc_prompt, name="User")]}
-result = graph.process(state)
+# Step 18: Create initial state with the prompt
+initial_state = AgentState(
+    messages=[HumanMessage(content="Create a tic-tac-toe game")],
+    next="supervisor"
+)
 
-print(result)
+# Step 19: Execute the compiled graph with the initial state
+final_state = graph.run(initial_state)
+
+# Step 20: Print the result
+print(final_state)
