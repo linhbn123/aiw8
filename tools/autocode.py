@@ -174,9 +174,9 @@ initial_state = AgentState(
 
 # Step 19: Execute the compiled graph with the initial state
 # Since there is no 'run' method, we will iterate until we reach the end state
-state = initial_state
-while state["next"] != END:
-    state = graph.invoke(state)
+# state = initial_state
+# while state["next"] != END:
+#     state = graph.invoke(state)
 
 # Step 20: Print the result
-print(state)
+print(graph.invoke(initial_state))
