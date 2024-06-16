@@ -3,8 +3,12 @@
 from typing import Annotated, Sequence, TypedDict
 import functools
 import operator
+import os
+import subprocess
+from typing import Optional
 
 from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain.tools import tool
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
@@ -12,6 +16,9 @@ from langchain_core.output_parsers.openai_functions import JsonOutputFunctionsPa
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_experimental.tools import PythonREPLTool
 from langgraph.graph import StateGraph, END
+
+ROOT_DIR = "./"
+VALID_FILE_TYPES = {"py", "txt", "md", "cpp", "c", "java", "js", "html", "css", "ts", "json"}
 
 # Step 2: Define tools
 # Here, define any tools the agents might use. Example given:
@@ -139,6 +146,93 @@ code_agent = create_agent(
 )
 code_node = functools.partial(agent_node, agent=code_agent, name="Coder")
 
+@tool
+def create_directory(directory: str) -> str:
+    """
+    Create a new writable directory with the given directory name if it does not exist.
+    If the directory exists, it ensures the directory is writable.
+
+    Parameters:
+    directory (str): The name of the directory to create.
+
+    Returns:
+    str: Success or error message.
+    """
+    if ".." in directory:
+        return f"Cannot make a directory with '..' in path"
+    try:
+        os.makedirs(directory, exist_ok=True)
+        subprocess.run(["chmod", "u+w", directory], check=True)
+        return f"Directory successfully '{directory}' created and set as writeable."
+    except subprocess.CalledProcessError as e:
+        return f"Failed to create or set writable directory '{directory}': {e}"
+    except Exception as e:
+        return f"An unexpected error occurred: {e}"
+
+
+@tool
+def find_file(filename: str, path: str) -> Optional[str]:
+    """
+    Recursively searches for a file in the given path.
+    Returns string of full path to file, or None if file not found.
+    """
+    # TODO handle multiple matches
+    for root, dirs, files in os.walk(path):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
+
+
+@tool
+def create_file(filename: str, content: str = "", directory=""):
+    """Creates a new file and content in the specified directory."""
+    # Validate file type
+    try:
+        file_stem, file_type = filename.split(".")
+        assert file_type in VALID_FILE_TYPES
+    except:
+        return f"Invalid filename {filename} - must end with a valid file type: {valid_file_types}"
+    directory_path = os.path.join(ROOT_DIR, directory)
+    file_path = os.path.join(directory_path, filename)
+    if not os.path.exists(file_path):
+        try:
+            with open(file_path, "w")as file:
+                file.write(content)
+            print(f"File '{filename}' created successfully at: '{file_path}'.")
+            return f"File '{filename}' created successfully at: '{file_path}'."
+        except Exception as e:
+            print(f"Failed to create file '{filename}' at: '{file_path}': {str(e)}")
+            return f"Failed to create file '{filename}' at: '{file_path}': {str(e)}"
+    else:
+        print(f"File '{filename}' already exists at: '{file_path}'.")
+        return f"File '{filename}' already exists at: '{file_path}'."
+
+
+@tool
+def update_file(filename: str, content: str, directory: str = ""):
+    """Updates, appends, or modifies an existing file with new content."""
+    if directory:
+        file_path = os.path.join(ROOT_DIR, directory, filename)
+    else:
+        file_path = find_file(filename, ROOT_DIR)
+
+    if file_path and os.path.exists(file_path):
+        try:
+            with open(file_path, "a") as file:
+                file.write(content)
+            return f"File '{filename}' updated successfully at: '{file_path}'"
+        except Exception as e:
+            return f"Failed to update file '{filename}' at: '{file_path}' - {str(e)}"
+    else:
+        return f"File '{filename}' not found at: '{file_path}'"
+
+write_agent = create_agent(
+    llm,
+    [create_directory, create_file, find_file, update_file],
+    "Write the generated code to files.",
+)
+write_node = functools.partial(agent_node, agent=write_agent, name="FileWriter")
+
 # Step 13: Define the workflow using StateGraph
 # Add nodes and their corresponding functions to the workflow.
 workflow = StateGraph(AgentState)
@@ -146,6 +240,7 @@ workflow.add_node("Reviewer", review_node)
 workflow.add_node("Researcher", research_node)
 workflow.add_node("Coder", code_node)
 workflow.add_node("QATester", test_node)
+workflow.add_node("FileWriter", write_node)
 workflow.add_node("supervisor", supervisor_chain)
 
 # Step 14: Add edges to the workflow
