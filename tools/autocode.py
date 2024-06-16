@@ -130,7 +130,7 @@ test_agent = create_agent(
     [python_repl_tool],  # DANGER DANGER runs arbitrary Python code
     "You may generate safe python code to test functions and classes using unittest or pytest.",
 )
-test_node = functools.partial(agent_node, agent=test_agent, name="QA Tester")
+test_node = functools.partial(agent_node, agent=test_agent, name="QATester")
 
 code_agent = create_agent(
     llm,
@@ -145,7 +145,7 @@ workflow = StateGraph(AgentState)
 workflow.add_node("Reviewer", review_node)
 workflow.add_node("Researcher", research_node)
 workflow.add_node("Coder", code_node)
-workflow.add_node("QA Tester", test_node)
+workflow.add_node("QATester", test_node)
 workflow.add_node("supervisor", supervisor_chain)
 
 # Step 14: Add edges to the workflow
