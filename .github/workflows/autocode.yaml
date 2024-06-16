@@ -1,0 +1,58 @@
+name: Create PR on Issue Change
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  create_pr:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Set up Python using the latest stable version
+      - name: Setup Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.12'
+
+      # Install Python dependencies
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r tools/requirements.txt
+
+      - name: Extract repository owner and name
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          IFS='/' read -r owner repo_name <<< "$GITHUB_REPOSITORY"
+          echo "repository_owner=$owner" >> $GITHUB_ENV
+          echo "repository_name=$repo_name" >> $GITHUB_ENV
+
+      - name: Review code changes
+        run: |
+          python tools/autocode.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          PINECONE_API_KEY: ${{ secrets.PINECONE_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+          LANGCHAIN_ENDPOINT: ${{ secrets.LANGCHAIN_ENDPOINT }}
+          LANGCHAIN_PROJECT: ${{ secrets.LANGCHAIN_PROJECT }}
+          LANGCHAIN_TRACING_V2: ${{ secrets.LANGCHAIN_TRACING_V2 }}
+          LANGCHAIN_API_KEY: ${{ secrets.LANGCHAIN_API_KEY }}
+          REPO_PATH: ${{ github.repository }} # E.g. owner/name
+          REPO_OWNER: ${{ env.repository_owner }} # E.g. owner
+          REPO_NAME: ${{ env.repository_name }} # E.g. name
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          SOURCE_BRANCH: main # FIXME this should be flexible
+
+      # Additional step to enable debugging, helps in troublshooting
+      - name: Enable Debug Logging
+        run: |
+          echo "ACTIONS_STEP_DEBUG=true" >> $GITHUB_ENV
