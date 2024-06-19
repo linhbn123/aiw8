@@ -17,6 +17,8 @@ from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_experimental.tools import PythonREPLTool
 from langgraph.graph import StateGraph, END
 
+from gitutils import clone_repo, switch_to_local_repo_path, checkout_source_branch, has_changes, generate_branch_name, create_branch_and_push, create_pull_request
+
 ROOT_DIR = "./"
 VALID_FILE_TYPES = {"py", "txt", "md", "cpp", "c", "java", "js", "html", "css", "ts", "json"}
 
@@ -29,7 +31,7 @@ python_repl_tool = PythonREPLTool()
 
 # Step 3: Define the system prompt for the supervisor agent
 # Customize the members list as needed.
-members = ["Researcher", "Coder", "Reviewer", "QATester", "FileWriter"]
+members = ["Researcher", "Coder", "Reviewer", "QATester", "FileWriter", "CheckoutAgent", "PrAgent"]
 system_prompt = (
     f"You are a supervisor tasked with managing a conversation between the"
     f" following workers:  {members}. Given the following user request,"
@@ -232,6 +234,20 @@ write_agent = create_agent(
     "Write the generated code to files.",
 )
 write_node = functools.partial(agent_node, agent=write_agent, name="FileWriter")
+
+checkout_agent = create_agent(
+    llm,
+    [clone_repo, switch_to_local_repo_path, checkout_source_branch],
+    "You're tasked with preparing the local git repository for other agents to work on it.",
+)
+checkout_node = functools.partial(agent_node, agent=checkout_agent, name="CheckoutAgent")
+
+pr_agent = create_agent(
+    llm,
+    [has_changes, generate_branch_name, create_branch_and_push, create_pull_request],
+    "You're tasked with checking if there are local changes, and if yes, prepare a pull request targetting main.",
+)
+pr_node = functools.partial(agent_node, agent=pr_agent, name="PrAgent")
 
 # Step 13: Define the workflow using StateGraph
 # Add nodes and their corresponding functions to the workflow.
