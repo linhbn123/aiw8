@@ -73,44 +73,6 @@ def checkout_source_branch():
 
 @tool
 @traceable
-def has_changes():
-    """
-    Check if the repository has any changes.
-
-    Returns:
-        bool: True if the repository has changes, False otherwise.
-    """
-    repo = git.Repo(LOCAL_REPO_PATH)
-    print(f"Repo has changes: {repo.is_dirty()}")
-    return repo.is_dirty()
-
-@tool
-@traceable
-def commit_and_push(commit_message):
-    """
-    Commit the changes and push to the remote branch.
-
-    Args:
-        commit_message (str): The commit message.
-    """
-
-    branch_name = os.getenv('SOURCE_BRANCH')
-    repo = git.Repo(LOCAL_REPO_PATH)
-    print(f"Active branch: {repo.active_branch.name}")
-    repo.git.add(update=True)
-    repo.index.commit(commit_message)
-    origin = repo.remote(name='origin')
-    print(f"Pushing changes to remote branch '{branch_name}'")
-    push_result = origin.push(refspec=f'{branch_name}:{branch_name}')
-    print("Push result:")
-    for push_info in push_result:
-        print(f"  - Summary: {push_info.summary}")
-        print(f"    Remote ref: {push_info.remote_ref}")
-        print(f"    Local ref: {push_info.local_ref}")
-        print(f"    Flags: {push_info.flags}")
-
-@tool
-@traceable
 def create_branch_and_push(branch_name: str, commit_message: str):
     """
     Create a new branch, add all changed files, and push to the remote origin.
@@ -142,21 +104,15 @@ def create_branch_and_push(branch_name: str, commit_message: str):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-# Usage example:
-# branch_name = "autocode/github-issue-123-1632507759123"
-# commit_message = "Test Message"
-# create_branch_and_push(branch_name, commit_message)
-
 @tool
 @traceable
-def create_pull_request(title: str, body: str, base: str = "main"):
+def create_pull_request(title: str, body: str):
     """
     Create a pull request targeting the main branch.
     
     Args:
         title (str): The title of the pull request.
         body (str): The body description of the pull request.
-        base (str): The base branch to target (default is "main").
     """
     try:
         # Initialize GitHub API with token
@@ -172,12 +128,7 @@ def create_pull_request(title: str, body: str, base: str = "main"):
         branch_name = git.Repo(LOCAL_REPO_PATH).active_branch.name
 
         # Create a pull request
-        pr = repo.create_pull(title=title, body=body, head=branch_name, base=base)
+        pr = repo.create_pull(title=title, body=body, head=branch_name, base=os.getenv('SOURCE_BRANCH'))
         print(f"Pull request created: {pr.html_url}")
     except Exception as e:
         print(f"An error occurred: {e}")
-
-# Usage example:
-# pr_title = "New Feature"
-# pr_body = "This PR adds new features."
-# create_pull_request(pr_title, pr_body, base="main")
