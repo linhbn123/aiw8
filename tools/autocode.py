@@ -257,6 +257,8 @@ workflow.add_node("Researcher", research_node)
 workflow.add_node("Coder", code_node)
 workflow.add_node("QATester", test_node)
 workflow.add_node("FileWriter", write_node)
+workflow.add_node("CheckoutAgent", checkout_node)
+workflow.add_node("PrAgent", pr_node)
 workflow.add_node("supervisor", supervisor_chain)
 
 # Step 14: Add edges to the workflow
