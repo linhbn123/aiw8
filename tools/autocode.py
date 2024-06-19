@@ -281,7 +281,7 @@ graph = workflow.compile()
 
 # Step 18: Create initial state with the prompt
 initial_state = AgentState(
-    messages=[HumanMessage(content="Prepare the local repository and create a tic-tac-toe game")],
+    messages=[HumanMessage(content="Prepare the local repository and create a tic-tac-toe game with unit tests, then raise a pull request")],
     next="CheckoutAgent"
 )
 
