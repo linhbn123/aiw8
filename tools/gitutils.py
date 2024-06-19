@@ -6,7 +6,8 @@ from langchain.tools import tool
 from langsmith import traceable
 
 # Initialize local repository path
-LOCAL_REPO_PATH = "/tmp/aiw8-" + int(time.time() * 1000)
+TIMESTAMP = int(time.time() * 1000)
+LOCAL_REPO_PATH = "/tmp/aiw8-" + str(TIMESTAMP)
 
 @tool
 @traceable
@@ -20,8 +21,7 @@ def generate_branch_name(issue_number: int) -> str:
     Returns:
         str: The generated branch name.
     """
-    timestamp = int(time.time() * 1000)
-    branch_name = f"autocode/github-issue-{issue_number}-{timestamp}"
+    branch_name = f"autocode/github-issue-{issue_number}-{TIMESTAMP}"
     print(f"Generated branch name: {branch_name}")
     return branch_name
 
