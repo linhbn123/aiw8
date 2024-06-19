@@ -273,7 +273,7 @@ conditional_map["FINISH"] = END
 workflow.add_conditional_edges("supervisor", lambda x: x["next"], conditional_map)
 
 # Step 16: Set the entry point
-workflow.set_entry_point("supervisor")
+workflow.set_entry_point("CheckoutAgent")
 
 # Step 17: Compile the workflow into a graph
 # This creates the executable workflow.
@@ -281,8 +281,8 @@ graph = workflow.compile()
 
 # Step 18: Create initial state with the prompt
 initial_state = AgentState(
-    messages=[HumanMessage(content="Create a tic-tac-toe game")],
-    next="supervisor"
+    messages=[HumanMessage(content="Prepare the local repository and create a tic-tac-toe game")],
+    next="CheckoutAgent"
 )
 
 # Step 19: Execute the compiled graph with the initial state
