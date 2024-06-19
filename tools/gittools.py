@@ -128,7 +128,7 @@ def create_pull_request(title: str, body: str):
         branch_name = git.Repo(LOCAL_REPO_PATH).active_branch.name
 
         # Create a pull request
-        pr = repo.create_pull(title=title, body=f"https://github.com/{os.getenv('REPO_PATH')}/issues/{os.getenv('ISSUE_NUMBER')}\n\n{body}", head=branch_name, base=os.getenv('SOURCE_BRANCH'))
+        pr = repo.create_pull(title=title, body=body, head=branch_name, base=os.getenv('SOURCE_BRANCH'))
         print(f"Pull request created: {pr.html_url}")
     except Exception as e:
         print(f"An error occurred: {e}")
