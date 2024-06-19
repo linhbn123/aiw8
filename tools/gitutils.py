@@ -6,7 +6,7 @@ from langchain.tools import tool
 from langsmith import traceable
 
 # Initialize local repository path
-LOCAL_REPO_PATH = "/tmp/aiw8"
+LOCAL_REPO_PATH = "/tmp/aiw8-" + int(time.time() * 1000)
 
 @tool
 @traceable
@@ -59,7 +59,7 @@ def checkout_source_branch():
     Checkout the main branch, pull latest changes, and checkout the specific branch.
     """
     # Initialize the repository object
-    repo = git.Repo(os.getcwd())
+    repo = git.Repo(LOCAL_REPO_PATH)
 
     # 1. Checkout the main branch
     repo.git.checkout('main')
@@ -80,7 +80,7 @@ def has_changes():
     Returns:
         bool: True if the repository has changes, False otherwise.
     """
-    repo = git.Repo(os.getcwd())
+    repo = git.Repo(LOCAL_REPO_PATH)
     print(f"Repo has changes: {repo.is_dirty()}")
     return repo.is_dirty()
 
@@ -95,7 +95,7 @@ def commit_and_push(commit_message):
     """
 
     branch_name = os.getenv('SOURCE_BRANCH')
-    repo = git.Repo(os.getcwd())
+    repo = git.Repo(LOCAL_REPO_PATH)
     print(f"Active branch: {repo.active_branch.name}")
     repo.git.add(update=True)
     repo.index.commit(commit_message)
@@ -121,7 +121,7 @@ def create_branch_and_push(branch_name: str, commit_message: str):
     """
     try:
         # Initialize the repository object
-        repo = git.Repo(os.getcwd())
+        repo = git.Repo(LOCAL_REPO_PATH)
 
         # Create a new branch and checkout
         repo.git.checkout('-b', branch_name)
@@ -169,7 +169,7 @@ def create_pull_request(title: str, body: str, base: str = "main"):
         repo = g.get_repo(repo_path)
 
         # Get the current branch name
-        branch_name = git.Repo(os.getcwd()).active_branch.name
+        branch_name = git.Repo(LOCAL_REPO_PATH).active_branch.name
 
         # Create a pull request
         pr = repo.create_pull(title=title, body=body, head=branch_name, base=base)
