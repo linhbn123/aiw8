@@ -32,7 +32,7 @@ jobs:
           echo "repository_owner=$owner" >> $GITHUB_ENV
           echo "repository_name=$repo_name" >> $GITHUB_ENV
 
-      - name: Review code changes
+      - name: Autocode
         run: |
           python tools/autocode.py
         env:
